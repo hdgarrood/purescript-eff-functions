@@ -1,4 +1,4 @@
-## purescript-eff-functions
+# purescript-eff-functions
 
 Types for effectful uncurried functions, as well as functions for converting
 back and forth between them. Useful for FFI bindings.

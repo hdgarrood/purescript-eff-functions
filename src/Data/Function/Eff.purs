@@ -68,18 +68,6 @@
 -- | into PureScript as possible, so that we can leverage the type system.
 -- | Hopefully, this is a little less tiresome too.
 -- |
--- | The general naming scheme for functions and types in this module is as
--- | follows:
--- | * `EffFn{N}` means, a curried function which accepts N arguments and
--- |   performs some effects. The first type argument is the row of effects,
--- |   which works exactly the same way as in `Eff`. The last type argument
--- |   is the return type. All other arguments are the actual function's
--- |   arguments.
--- | * `runEffFn{N}` takes an `EffFn` of N arguments, and converts it into the
--- |   normal PureScript form: a curried function which returns an Eff action.
--- | * `mkEffFn{N}` is the inverse of `runEffFn{N}`. It can be useful for
--- |   callbacks.
--- |
 -- | Here's a slightly more advanced example. Here, because we are using
 -- | callbacks, we need to use `mkEffFn{N}` as well.
 -- |
@@ -130,6 +118,19 @@
 -- | logMessage level message callback =
 -- |   runEffFn3 logMessageImpl level message (mkEffFn1 callback)
 -- | ```
+-- |
+-- | The general naming scheme for functions and types in this module is as
+-- | follows:
+-- | * `EffFn{N}` means, a curried function which accepts N arguments and
+-- |   performs some effects. The first type argument is the row of effects,
+-- |   which works exactly the same way as in `Eff`. The last type argument
+-- |   is the return type. All other arguments are the actual function's
+-- |   arguments.
+-- | * `runEffFn{N}` takes an `EffFn` of N arguments, and converts it into the
+-- |   normal PureScript form: a curried function which returns an Eff action.
+-- | * `mkEffFn{N}` is the inverse of `runEffFn{N}`. It can be useful for
+-- |   callbacks.
+-- |
 
 module Data.Function.Eff where
 
