@@ -6,6 +6,10 @@
     "bower_components",
     "output"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/purescript/purescript-eff-functions"
+  },
   "devDependencies": {
     "purescript-console": "^0.1.0"
   }
