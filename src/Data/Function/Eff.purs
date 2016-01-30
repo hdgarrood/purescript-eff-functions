@@ -1,3 +1,136 @@
+-- | This module defines types for effectful uncurried functions, as well as
+-- | functions for converting back and forth between them.
+-- |
+-- | Traditionally, it has been difficult to give a PureScript type to
+-- | JavaScript functions such as this one:
+-- |
+-- | ```javascript
+-- | function logMessage(level, message) {
+-- |   console.log(level + ": " + message);
+-- | }
+-- | ```
+-- |
+-- | In particular, note that `logMessage` performs effects immediately after
+-- | receiving all of its parameters, so giving it the type `Data.Function.Fn2
+-- | String String Unit`, while convenient, would effectively be a lie.
+-- |
+-- | Because there has been no way of giving such functions types, we generally
+-- | resort to converting functions into the normal PureScript form (namely,
+-- | a curried function returning an Eff action), and performing the
+-- | marshalling in JavaScript, in the FFI module, like this:
+-- |
+-- | ```purescript
+-- | -- In the PureScript file:
+-- | foreign import logMessage :: forall eff.
+-- |   String -> String -> Eff (console :: CONSOLE | eff) Unit
+-- | ```
+-- | ```javascript
+-- | // In the FFI file:
+-- | exports.logMessage = function(level) {
+-- |   return function(message) {
+-- |     return function() {
+-- |       logMessage(level, message);
+-- |     };
+-- |   };
+-- | };
+-- | ```
+-- |
+-- | This method, unfortunately, turns out to be both tiresome and error-prone.
+-- | This module offers an alternative solution. By providing you with:
+-- |  * the ability to give the real `logMessage` function a PureScript type,
+-- |    and
+-- |  * functions for converting between this form and the normal PureScript
+-- |    form,
+-- |
+-- | the FFI boilerplate is no longer needed. The previous example becomes:
+-- |
+-- | ```purescript
+-- | -- In the PureScript file:
+-- | foreign import logMessageImpl :: forall eff.
+-- |   EffFn2 (console :: CONSOLE | eff) String String Unit
+-- | ```
+-- | ```javascript
+-- | // In the FFI file:
+-- | exports.logMessageImpl = logMessage
+-- | ```
+-- |
+-- | You can then use `runEffFn2` to provide a nicer version:
+-- |
+-- | ```purescript
+-- | logMessage :: forall eff.
+-- |   String -> String -> Eff (console :: CONSOLE | eff) Unit
+-- | logMessage = runEffFn2 logMessageImpl
+-- | ```
+-- |
+-- | (note that this has the same type as the original `logMessage`).
+-- |
+-- | Effectively, we have reduced the risk of errors by moving as much code
+-- | into PureScript as possible, so that we can leverage the type system.
+-- | Hopefully, this is a little less tiresome too.
+-- |
+-- | The general naming scheme for functions and types in this module is as
+-- | follows:
+-- | * `EffFn{N}` means, a curried function which accepts N arguments and
+-- |   performs some effects. The first type argument is the row of effects,
+-- |   which works exactly the same way as in `Eff`. The last type argument
+-- |   is the return type. All other arguments are the actual function's
+-- |   arguments.
+-- | * `runEffFn{N}` takes an `EffFn` of N arguments, and converts it into the
+-- |   normal PureScript form: a curried function which returns an Eff action.
+-- | * `mkEffFn{N}` is the inverse of `runEffFn{N}`. It can be useful for
+-- |   callbacks.
+-- |
+-- | Here's a slightly more advanced example. Here, because we are using
+-- | callbacks, we need to use `mkEffFn{N}` as well.
+-- |
+-- | Suppose our `logMessage` changes so that it sometimes sends details of the
+-- | message to some external server, and in those cases, we want the resulting
+-- | `HttpResponse` (for whatever reason).
+-- |
+-- | ```javascript
+-- | function logMessage(level, message, callback) {
+-- |   console.log(level + ": " + message);
+-- |   if (level > LogLevel.WARN) {
+-- |     LogAggregatorService.post("/logs", {
+-- |       level: level,
+-- |       message: message
+-- |     }, callback);
+-- |   } else {
+-- |     callback(null);
+-- |   }
+-- | }
+-- | ```
+-- |
+-- | The import then looks like this:
+-- | ```purescript
+-- | foreign import logMessageImpl :: forall eff.
+-- |  EffFn3 (http :: HTTP, console :: CONSOLE | eff)
+-- |         String
+-- |         String
+-- |         (EffFn1 (http :: HTTP, console :: CONSOLE | eff)
+-- |            (Nullable HttpResponse)
+-- |            Unit)
+-- |         Unit
+-- | ```
+-- |
+-- | And, as before, the FFI file is extremely simple:
+-- | ```javascript
+-- | exports.logMessageImpl = logMessage
+-- | ```
+-- |
+-- | Finally, we use `runEffFn{N}` and `mkEffFn{N}` for a more comfortable
+-- | PureScript version:
+-- |
+-- | ```purescript
+-- | logMessage :: forall eff.
+-- |   String ->
+-- |   String ->
+-- |   (Nullable HttpResponse -> Eff (http :: HTTP, console :: CONSOLE | eff) Unit) ->
+-- |   Eff (http :: HTTP, console :: CONSOLE | eff) Unit
+-- | logMessage level message callback =
+-- |   runEffFn3 logMessageImpl level message (mkEffFn1 callback)
+-- | ```
+
 module Data.Function.Eff where
 
 import Control.Monad.Eff (Eff())
