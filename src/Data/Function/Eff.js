@@ -6,7 +6,7 @@ exports.mkEffFn1 = function mkEffFn1(fn) {
   };
 };
 
-exports.mkEffFn2 = function mkEffFn1(fn) {
+exports.mkEffFn2 = function mkEffFn2(fn) {
   return function(a, b) {
     return fn(a)(b)();
   };
