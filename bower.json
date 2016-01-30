@@ -1,5 +1,6 @@
 {
   "name": "purescript-eff-functions",
+  "version": "0.1.0",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -8,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/purescript/purescript-eff-functions"
+    "url": "git://github.com/hdgarrood/purescript-eff-functions"
   },
   "devDependencies": {
     "purescript-console": "^0.1.0"
