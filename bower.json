@@ -1,6 +1,6 @@
 {
   "name": "purescript-eff-functions",
-  "version": "0.1.1",
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
