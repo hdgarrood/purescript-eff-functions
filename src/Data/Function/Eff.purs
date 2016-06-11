@@ -134,7 +134,7 @@
 
 module Data.Function.Eff where
 
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff (Eff)
 
 foreign import data EffFn1 :: # ! -> * -> * -> *
 foreign import data EffFn2 :: # ! -> * -> * -> * -> *
